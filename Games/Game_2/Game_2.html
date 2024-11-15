@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tank Battle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #111;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        canvas {
+            background: #222;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Hacer el canvas del tamaño de la ventana
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Tank {
+            constructor(x, y, image, isEnemy = false) {
+                this.x = x;
+                this.y = y;
+                this.width = 80;  // Tanques más anchos
+                this.height = 40; // Tanques más alargados
+                this.speed = 6;
+                this.bullets = [];
+                this.health = 100;
+                this.reloadTime = 0;
+                this.maxReloadTime = 20;
+                this.image = new Image();
+                this.image.src = image;
+                this.isEnemy = isEnemy;
+                this.rotation = isEnemy ? Math.PI : 0; // Rotación inicial
+            }
+
+            draw() {
+                if (this.health <= 0) return;
+                
+                ctx.save();
+                // Trasladar al centro del tanque
+                ctx.translate(this.x + this.width/2, this.y + this.height/2);
+                // Rotar
+                ctx.rotate(this.rotation);
+                // Dibujar el tanque centrado
+                ctx.drawImage(this.image, -this.width/2, -this.height/2, this.width, this.height);
+                ctx.restore();
+                
+                // Barra de vida
+                ctx.fillStyle = 'red';
+                ctx.fillRect(this.x, this.y - 20, this.width, 8);
+                ctx.fillStyle = 'green';
+                ctx.fillRect(this.x, this.y - 20, (this.width * this.health) / 100, 8);
+            }
+
+            update() {
+                if (this.health <= 0) return;
+                if (this.reloadTime > 0) this.reloadTime--;
+                
+                // Actualizar posición de las balas
+                for (let i = this.bullets.length - 1; i >= 0; i--) {
+                    const bullet = this.bullets[i];
+                    bullet.x += bullet.speedX;
+                    bullet.y += bullet.speedY;
+
+                    // Eliminar balas fuera de la pantalla
+                    if (bullet.x < 0 || bullet.x > canvas.width || 
+                        bullet.y < 0 || bullet.y > canvas.height) {
+                        this.bullets.splice(i, 1);
+                        continue;
+                    }
+                }
+            }
+
+            shoot(targetX, targetY) {
+                if (this.reloadTime > 0 || this.health <= 0) return;
+                
+                const angle = Math.atan2(targetY - (this.y + this.height/2), 
+                                       targetX - (this.x + this.width/2));
+                
+                // Ajustar la posición inicial de la bala según la rotación del tanque
+                const bulletStartX = this.x + this.width/2 + Math.cos(this.rotation) * (this.width/2);
+                const bulletStartY = this.y + this.height/2 + Math.sin(this.rotation) * (this.width/2);
+                
+                this.bullets.push({
+                    x: bulletStartX,
+                    y: bulletStartY,
+                    radius: 6,
+                    speedX: Math.cos(angle) * 10,
+                    speedY: Math.sin(angle) * 10,
+                    color: this.isEnemy ? 'red' : 'blue'
+                });
+
+                this.reloadTime = this.maxReloadTime;
+            }
+
+            updateRotation(targetX, targetY) {
+                this.rotation = Math.atan2(
+                    targetY - (this.y + this.height/2),
+                    targetX - (this.x + this.width/2)
+                );
+            }
+        }
+
+        const player = new Tank(100, canvas.height/2, 'tank.png');
+        const enemies = [
+            new Tank(canvas.width - 200, canvas.height/2, 'evil_tank.png', true)
+        ];
+
+        const keys = {};
+        document.addEventListener('keydown', e => keys[e.key] = true);
+        document.addEventListener('keyup', e => keys[e.key] = false);
+
+        // Actualizar la rotación del tanque con el movimiento del ratón
+        document.addEventListener('mousemove', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            player.updateRotation(x, y);
+        });
+
+        document.addEventListener('click', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            player.shoot(x, y);
+        });
+
+        function checkCollision(bullet, tank) {
+            return bullet.x + bullet.radius > tank.x && 
+                   bullet.x - bullet.radius < tank.x + tank.width &&
+                   bullet.y + bullet.radius > tank.y && 
+                   bullet.y - bullet.radius < tank.y + tank.height;
+        }
+
+        function updateGame() {
+            // Movimiento del jugador
+            const moveSpeed = player.speed;
+            
+            if (keys['ArrowLeft'] || keys['a']) {
+                if (player.x > 0) player.x -= moveSpeed;
+            }
+            if (keys['ArrowRight'] || keys['d']) {
+                if (player.x < canvas.width - player.width) player.x += moveSpeed;
+            }
+            if (keys['ArrowUp'] || keys['w']) {
+                if (player.y > 0) player.y -= moveSpeed;
+            }
+            if (keys['ArrowDown'] || keys['s']) {
+                if (player.y < canvas.height - player.height) player.y += moveSpeed;
+            }
+
+            player.update();
+            
+            // Actualizar enemigos
+            enemies.forEach(enemy => {
+                if (enemy.health <= 0) return;
+                
+                // IA mejorada: el enemigo sigue al jugador
+                enemy.updateRotation(player.x + player.width/2, player.y + player.height/2);
+                
+                // Disparar al jugador cuando está en línea de visión
+                if (enemy.reloadTime <= 0) {
+                    enemy.shoot(player.x + player.width/2, player.y + player.height/2);
+                }
+                
+                enemy.update();
+            });
+
+            // Comprobar colisiones
+            player.bullets.forEach((bullet, bulletIndex) => {
+                enemies.forEach(enemy => {
+                    if (enemy.health > 0 && checkCollision(bullet, enemy)) {
+                        enemy.health -= 20;
+                        player.bullets.splice(bulletIndex, 1);
+                    }
+                });
+            });
+
+            enemies.forEach(enemy => {
+                enemy.bullets.forEach((bullet, bulletIndex) => {
+                    if (player.health > 0 && checkCollision(bullet, player)) {
+                        player.health -= 15;
+                        enemy.bullets.splice(bulletIndex, 1);
+                    }
+                });
+            });
+        }
+
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Dibujar cuadrícula de fondo
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            const gridSize = 50;
+            for(let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for(let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Dibujar balas con efecto de brillo
+            function drawBullet(bullet) {
+                // Efecto de brillo
+                const gradient = ctx.createRadialGradient(
+                    bullet.x, bullet.y, 0,
+                    bullet.x, bullet.y, bullet.radius * 2
+                );
+                gradient.addColorStop(0, bullet.color);
+                gradient.addColorStop(1, 'transparent');
+                
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, bullet.radius * 2, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                
+                // Bala principal
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+                ctx.fillStyle = bullet.color;
+                ctx.fill();
+            }
+
+            player.bullets.forEach(drawBullet);
+            enemies.forEach(enemy => enemy.bullets.forEach(drawBullet));
+
+            // Dibujar tanques
+            player.draw();
+            enemies.forEach(enemy => enemy.draw());
+
+            // Mostrar mensajes de estado del juego
+            if (player.health <= 0) {
+                ctx.fillStyle = 'red';
+                ctx.font = 'bold 72px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('¡Game Over!', canvas.width/2, canvas.height/2);
+                ctx.font = '24px Arial';
+                ctx.fillText('Presiona F5 para reiniciar', canvas.width/2, canvas.height/2 + 40);
+            } else if (enemies.every(enemy => enemy.health <= 0)) {
+                ctx.fillStyle = '#00ff00';
+                ctx.font = 'bold 72px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('¡Victoria!', canvas.width/2, canvas.height/2);
+                ctx.font = '24px Arial';
+                ctx.fillText('Presiona F5 para reiniciar', canvas.width/2, canvas.height/2 + 40);
+            }
+        }
+
+        function gameLoop() {
+            updateGame();
+            drawGame();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Esperar a que las imágenes se carguen
+        Promise.all([
+            new Promise(resolve => player.image.onload = resolve),
+            ...enemies.map(enemy => new Promise(resolve => enemy.image.onload = resolve))
+        ]).then(() => {
+            gameLoop();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+        canvas {
+            border: 2px solid #fff;
+            border-radius: 8px;
+            background-color: #121212;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
+        }
+        .score {
+            position: absolute;
+            top: 20px;
+            font-size: 20px;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+        }
+        .menu {
+            position: absolute;
+            text-align: center;
+        }
+        .menu button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #0dcaf0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu" id="menu">
+        <h1>Welcome to Pong</h1>
+        <button onclick="startGame('easy')">Easy</button>
+        <button onclick="startGame('normal')">Normal</button>
+        <button onclick="startGame('impossible')">Impossible</button>
+    </div>
+    <div class="score" id="score">
+        <span id="player1">You: 0</span>
+        <span id="player2">IA: 0</span>
+    </div>
+    <canvas id="pong" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('pong');
+        const ctx = canvas.getContext('2d');
+        const player1Score = document.getElementById("player1");
+        const player2Score = document.getElementById("player2");
+        const menu = document.getElementById('menu');
+
+        // Variables
+        const paddleWidth = 10;
+        const paddleHeight = 100;
+        const ballSize = 12;
+        let player1Y = canvas.height / 2 - paddleHeight / 2;
+        let player2Y = canvas.height / 2 - paddleHeight / 2;
+        let ballX = canvas.width / 2;
+        let ballY = canvas.height / 2;
+        let ballSpeedX = 5;
+        let ballSpeedY = 2;
+        let scorePlayer1 = 0;
+        let scorePlayer2 = 0;
+        let errorMargin;
+
+        // Dibuja las palas, la bola y el marcador
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Palas
+            ctx.fillStyle = '#0dcaf0';  // Color celeste para las palas
+            ctx.fillRect(0, player1Y, paddleWidth, paddleHeight);
+            ctx.fillRect(canvas.width - paddleWidth, player2Y, paddleWidth, paddleHeight);
+
+            // Bola
+            ctx.fillStyle = '#f0ad4e'; // Color amarillo para la bola
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, ballSize, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Actualiza la posición de la bola y la lógica del juego
+        function update() {
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Colisiones con las paredes
+            if (ballY + ballSize >= canvas.height || ballY - ballSize <= 0) {
+                ballSpeedY = -ballSpeedY;
+            }
+
+            // Colisiones con las palas y cálculo del rebote
+            if (ballX <= paddleWidth && ballY > player1Y && ballY < player1Y + paddleHeight) {
+                ballSpeedX = -ballSpeedX;
+                let impactPoint = (ballY - (player1Y + paddleHeight / 2)) / (paddleHeight / 2);
+                ballSpeedY = impactPoint * 5;
+            } else if (ballX >= canvas.width - paddleWidth && ballY > player2Y && ballY < player2Y + paddleHeight) {
+                ballSpeedX = -ballSpeedX;
+                let impactPoint = (ballY - (player2Y + paddleHeight / 2)) / (paddleHeight / 2);
+                ballSpeedY = impactPoint * 5;
+            }
+
+            // Movimiento automático de la paleta derecha con margen de error
+            const paddleCenterY = player2Y + paddleHeight / 2;
+            if (Math.abs(ballY - paddleCenterY) > errorMargin) {
+                if (ballY > paddleCenterY && player2Y < canvas.height - paddleHeight) {
+                    player2Y += 3;
+                } else if (ballY < paddleCenterY && player2Y > 0) {
+                    player2Y -= 3;
+                }
+            }
+
+            // Detecta cuando un jugador marca punto
+            if (ballX < 0) {
+                scorePlayer2++;
+                updateScore();
+                resetBall();
+            } else if (ballX > canvas.width) {
+                scorePlayer1++;
+                updateScore();
+                resetBall();
+            }
+        }
+
+        // Reinicia la bola en el centro
+        function resetBall() {
+            ballX = canvas.width / 2;
+            ballY = canvas.height / 2;
+            ballSpeedX = -ballSpeedX;
+            ballSpeedY = Math.random() * 4 - 2; // Añade un pequeño ángulo aleatorio
+        }
+
+        // Actualiza el marcador en pantalla
+        function updateScore() {
+            player1Score.textContent = `You: ${scorePlayer1}`;
+            player2Score.textContent = `IA: ${scorePlayer2}`;
+        }
+
+        // Maneja las teclas
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'w' && player1Y > 0) {
+                player1Y -= 20;
+            }
+            if (event.key === 's' && player1Y < canvas.height - paddleHeight) {
+                player1Y += 20;
+            }
+        });
+
+        // Inicia el juego con la dificultad seleccionada
+        function startGame(difficulty) {
+            menu.style.display = 'none'; // Oculta el menú
+
+            // Establece el margen de error según la dificultad
+            if (difficulty === 'easy') {
+                errorMargin = 100;
+            } else if (difficulty === 'normal') {
+                errorMargin = 50;
+            } else if (difficulty === 'impossible') {
+                errorMargin = 20;
+            }
+
+            gameLoop(); // Inicia el ciclo del juego
+        }
+
+        // Ciclo del juego
+        function gameLoop() {
+            draw();
+            update();
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>
