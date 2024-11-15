@@ -1,2 +1,3 @@
 # PlayZone
-This is a game library, here you can play some classic games and have a search bar and a switch to switch between dark mode and light mode.
+This is a game library that offers a wide selection of classic games. It features a search bar and a toggle switch to enable or disable dark mode.
+To access the library, navigate to the menu folder and execute the index.html
