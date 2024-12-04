@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Hunter</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1c1e22;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin: 0; /* Eliminar márgenes del cuerpo */
+        }
+        h2 {
+            color: #61dafb;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+            font-size: 30px;
+        }
+        #gameArea {
+            position: relative;
+            width: 80vw; /* Ancho reducido */
+            height: 50vh; /* Altura reducida */
+            border: 2px dashed #61dafb;
+            border-radius: 10px;
+            margin: 20px auto; /* Centrado */
+            overflow: hidden;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.8));
+        }
+        .star {
+            position: absolute;
+            width: 25px; /* Tamaño de las estrellas */
+            height: 25px;
+            background-color: #ffcc00;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            transition: transform 0.1s, opacity 0.1s, top 0.5s ease, left 0.5s ease;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #61dafb;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #21a1f1;
+        }
+        p {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+        #score {
+            font-weight: bold;
+            color: #ffcc00;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+            font-size: 24px;
+        }
+        #timer {
+            font-size: 24px;
+            color: #ff3333;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding-top: 100px;
+        }
+        .modal-content {
+            background-color: #1c1e22;
+            margin: auto;
+            padding: 20px;
+            border: 2px solid #61dafb;
+            border-radius: 10px;
+            width: 300px;
+            color: white;
+            text-align: center;
+        }
+        .close {
+            color: #ff3333;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: #ffcc00;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        /* Estilo adicional para asegurar buena apariencia en móviles */
+        @media (max-width: 600px) {
+            #gameArea {
+                width: 95vw; /* Aumentar el ancho para móviles */
+                height: 60vh; /* Aumentar la altura para móviles */
+            }
+            h2 {
+                font-size: 25px; /* Reducir tamaño de fuente para encabezado */
+            }
+            p, button {
+                font-size: 18px; /* Reducir tamaño de fuente para párrafos y botones */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>Star Hunter</h2>
+    <p>Click to earn points</p>
+    <div id="gameArea"></div>
+    <p>Points: <span id="score">0</span></p>
+    <p>Time: <span id="timer">30</span> seconds</p>
+    <button onclick="resetGame()">Restart Game</button>
+    <button id="pauseButton" onclick="togglePause()">Pause Game</button>
+    <button onclick="window.location.href='../../Menu/index.html'">Back to Menu</button>
+
+    <!-- Ventana emergente -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <p id="finalMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let timer = 30;
+        let interval;
+        let isPaused = false;
+        let gameStarted = false;
+
+        function generateStar() {
+            const gameArea = document.getElementById("gameArea");
+            const star = document.createElement("div");
+            star.className = "star";
+
+            // Posiciones aleatorias para las estrellas
+            star.style.top = Math.random() * (gameArea.clientHeight - 25) + "px";
+            star.style.left = Math.random() * (gameArea.clientWidth - 25) + "px";
+
+            // Movimiento de la estrella
+            moveStar(star);
+
+            star.onclick = function() {
+                score++;
+                document.getElementById("score").innerText = score;
+                star.style.opacity = "0";
+                setTimeout(() => {
+                    gameArea.removeChild(star);
+                    generateStar();
+                }, 100);
+            };
+
+            gameArea.appendChild(star);
+        }
+
+        function moveStar(star) {
+            const gameArea = document.getElementById("gameArea");
+            const moveInterval = setInterval(() => {
+                if (!isPaused) {
+                    const top = parseFloat(star.style.top);
+                    const left = parseFloat(star.style.left);
+                    const speedMultiplier = 1 + (30 - timer) / 30; // Aumenta la velocidad con el tiempo
+
+                    const newTop = top + Math.sin(Math.random() * Math.PI) * speedMultiplier;
+                    const newLeft = left + Math.cos(Math.random() * Math.PI) * speedMultiplier;
+
+                    // Limitar el movimiento dentro del área del juego
+                    if (newTop >= 0 && newTop <= gameArea.clientHeight - 25) {
+                        star.style.top = newTop + "px";
+                    }
+                    if (newLeft >= 0 && newLeft <= gameArea.clientWidth - 25) {
+                        star.style.left = newLeft + "px";
+                    }
+                }
+            }, 100);
+        }
+
+        function startTimer() {
+            interval = setInterval(() => {
+                if (!isPaused && gameStarted) {
+                    timer--;
+                    document.getElementById("timer").innerText = timer;
+                    if (timer <= 0) {
+                        clearInterval(interval);
+                        endGame();
+                    }
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameStarted = false;
+            const finalMessage = `Juego terminado! Puntuación final: ${score}`;
+            document.getElementById("finalMessage").innerText = finalMessage;
+            document.getElementById("myModal").style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById("myModal").style.display = "none";
+        }
+
+        function resetGame() {
+            score = 0;
+            timer = 30;
+            document.getElementById("score").innerText = score;
+            document.getElementById("timer").innerText = timer;
+            isPaused = false;
+            gameStarted = true;
+            document.getElementById("gameArea").innerHTML = ''; // Limpiar el área del juego
+            startTimer();
+            for (let i = 0; i < 5; i++) { // Generar 5 estrellas al reiniciar
+                generateStar();
+            }
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            document.getElementById("pauseButton").innerText = isPaused ? "Reanudar Juego" : "Pausar Juego";
+        }
+
+        window.onload = function() {
+            resetGame(); // Iniciar el juego al cargar
+        };
+    </script>
+</body>
+</html>
