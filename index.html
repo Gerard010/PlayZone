@@ -172,18 +172,16 @@
     </style>
 </head>
 <body>
+    <!-- GPPGames Label -->
+    <div style="font-size: 12px; color: gray; position: absolute; top: 10px; left: 10px;">
+        Propiedad de GPPGames
+    </div>
+
     <h1>PlayZone</h1>
 
-    <div class="game-buttons">
-        <button onclick="location.href='Games/Game_1/Game_1.html'">Star Hunter</button>
-        <button onclick="location.href='Games/Game_2/Game_2.html'">Tank War</button>
-        <button onclick="location.href='Games/Game_3/Game_3.html'">Pong</button>
-    </div>
-
-    <!-- Search Bar -->
-    <div class="search-container">
-        <input type="text" id="search-bar" class="search-bar" placeholder="Search...">
-    </div>
+    <button onclick="location.href='Games/Game_1/Game_1.html'">Star Hunter</button><br>
+    <button onclick="location.href='Games/Game_2/Game_2.html'">Tank War</button><br>
+    <button onclick="location.href='Games/Game_3/Game_3.html'">Pong</button><br>
 
     <!-- Dark Mode Switch -->
     <label class="switch">
@@ -191,15 +189,15 @@
         <span class="slider"></span>
     </label>
 
-    <!-- Footer -->
-    <footer style="text-align:center; margin-top:40px; font-size:14px; color:gray;">
-        Propiedad de GPPGames
-    </footer>
+    <!-- Search Bar -->
+    <div class="search-container">
+        <input type="text" id="search-bar" class="search-bar" placeholder="Search...">
+    </div>
 
     <script>
         const toggleCheckbox = document.getElementById('toggle-checkbox');
         const searchBar = document.getElementById('search-bar');
-        const buttons = document.querySelectorAll('.game-buttons button');
+        const buttons = document.querySelectorAll('button');
 
         // Toggle Dark Mode
         toggleCheckbox.addEventListener('change', () => {
@@ -210,10 +208,14 @@
         searchBar.addEventListener('input', (e) => {
             const searchText = e.target.value.toLowerCase();
             buttons.forEach(button => {
-                const visible = button.textContent.toLowerCase().includes(searchText);
-                button.style.display = visible ? 'inline-block' : 'none';
+                if (button.textContent.toLowerCase().includes(searchText)) {
+                    button.style.display = 'inline-block';
+                } else {
+                    button.style.display = 'none';
+                }
             });
         });
     </script>
 </body>
+</html>
 </html>
