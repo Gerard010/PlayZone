@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LifePath</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .menu {
+      background: white;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 400px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    .box {
+      margin-top: 15px;
+      padding: 12px;
+      background: #e0e0ff;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .box:hover {
+      background: #c4ccff;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    @media (max-width: 600px) {
+      .menu {
+        padding: 20px;
+        border-radius: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="menu">
+    <h2>Start Your Life</h2>
+
+    <label for="name">Name (required)</label>
+    <input type="text" id="name" placeholder="Enter your name">
+
+    <label>Gender</label>
+    <div class="box" id="selected-gender" onclick="window.location.href='gender.html'"></div>
+
+    <label>Social Class</label>
+    <div class="box" id="selected-social" onclick="window.location.href='class.html'"></div>
+
+    <label>Your Country</label>
+    <div class="box" id="selected-country" onclick="window.location.href='Countries.html'"></div>
+
+    <label>Stats</label>
+    <div class="box" onclick="window.location.href='stats.html'">Edit Stats</div>
+
+    <button onclick="startLife()">Start Life</button>
+  </div>
+
+  <script>
+    // Set default selections if not already set
+    if (!localStorage.getItem("selectedCountry"))
+      localStorage.setItem("selectedCountry", "United States 🇺🇸");
+    if (!localStorage.getItem("selectedGender"))
+      localStorage.setItem("selectedGender", "Male");
+    if (!localStorage.getItem("selectedSocial"))
+      localStorage.setItem("selectedSocial", "Commoner");
+
+    // Display current selections in the boxes
+    document.getElementById("selected-country").textContent = localStorage.getItem("selectedCountry");
+    document.getElementById("selected-gender").textContent = localStorage.getItem("selectedGender");
+    document.getElementById("selected-social").textContent = localStorage.getItem("selectedSocial");
+
+    // Set default stats if not already set
+    if (!localStorage.getItem("happiness")) localStorage.setItem("happiness", "50");
+    if (!localStorage.getItem("health")) localStorage.setItem("health", "50");
+    if (!localStorage.getItem("smarts")) localStorage.setItem("smarts", "50");
+    if (!localStorage.getItem("looks")) localStorage.setItem("looks", "50");
+
+    function startLife() {
+      const name = document.getElementById('name').value.trim();
+      if (!name) {
+        alert("Please enter a name.");
+        return;
+      }
+      // Reset previous life data
+      localStorage.removeItem("lifeData");
+      
+      const gender = localStorage.getItem("selectedGender");
+      const social = localStorage.getItem("selectedSocial");
+      const country = localStorage.getItem("selectedCountry");
+
+      const happiness = parseInt(localStorage.getItem("happiness"), 10);
+      const health = parseInt(localStorage.getItem("health"), 10);
+      const smarts = parseInt(localStorage.getItem("smarts"), 10);
+      const looks = parseInt(localStorage.getItem("looks"), 10);
+
+      const history = [`Year 0: ${name} was born in ${country}.`];
+
+      const lifeData = {
+        name: name,
+        gender: gender,
+        social: social,
+        country: country,
+        age: 0,
+        money: 0,
+        history: history,
+        happiness: happiness,
+        health: health,
+        smarts: smarts,
+        looks: looks
+      };
+
+      // Save new life data into localStorage
+      localStorage.setItem("lifeData", JSON.stringify(lifeData));
+
+      // Redirect to game.html
+      window.location.href = "game.html";
+    }
+  </script>
+</body>
+</html>
