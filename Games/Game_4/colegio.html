@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Colegio - LifePath Educación</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+    .container { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; }
+    .header { text-align: center; font-size: 24px; margin-bottom: 20px; }
+    .profile { text-align: center; margin-bottom: 20px; }
+    .profile span { display: block; margin: 5px 0; }
+    .stats { margin-bottom: 20px; }
+    .stat-container { display: flex; align-items: center; margin: 5px 0; }
+    .label { width: 120px; font-size: 16px; }
+    .progress { background: #ddd; width: 250px; height: 20px; border-radius: 10px; overflow: hidden; position: relative; }
+    .progress-bar { height: 100%; background: #28a745; }
+    .percent { position: absolute; width: 100%; text-align: center; font-size: 12px; color: #000; }
+    .stage { text-align: center; margin-bottom: 20px; }
+    .actions { text-align: center; margin-bottom: 20px; }
+    .actions button { padding: 10px; margin: 5px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
+    .back-btn { display: block; text-align: center; margin-top: 20px; padding: 10px; background: #6c757d; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+    @media (max-width:600px) {
+      .progress { width: 150px; }
+      .container { width: 90%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">Educación - LifePath</div>
+    <div class="profile" id="profile"></div>
+    <div class="stats" id="stats">
+      <div class="stat-container">
+        <div class="label">Felicidad:</div>
+        <div class="progress">
+          <div class="progress-bar" id="happinessBar"></div>
+          <div class="percent" id="happinessPct"></div>
+        </div>
+      </div>
+      <div class="stat-container">
+        <div class="label">Salud:</div>
+        <div class="progress">
+          <div class="progress-bar" id="healthBar"></div>
+          <div class="percent" id="healthPct"></div>
+        </div>
+      </div>
+      <div class="stat-container">
+        <div class="label">Inteligencia:</div>
+        <div class="progress">
+          <div class="progress-bar" id="smartsBar"></div>
+          <div class="percent" id="smartsPct"></div>
+        </div>
+      </div>
+      <div class="stat-container">
+        <div class="label">Atractivo:</div>
+        <div class="progress">
+          <div class="progress-bar" id="looksBar"></div>
+          <div class="percent" id="looksPct"></div>
+        </div>
+      </div>
+      <div class="stat-container">
+        <div class="label">Estrés:</div>
+        <div class="progress">
+          <div class="progress-bar" id="stressBar"></div>
+          <div class="percent" id="stressPct"></div>
+        </div>
+      </div>
+    </div>
+    <div class="stage" id="stageInfo"></div>
+    <div class="actions" id="actions"></div>
+    <button class="back-btn" onclick="goBack()">Volver</button>
+  </div>
+  <script>
+    let data = JSON.parse(localStorage.getItem("lifeData"));
+    if (!data) {
+      data = { age: 0, name: "Player", happiness: 50, health: 50, smarts: 50, looks: 50, stress: 0, money: 0, country: { name: "Spain", flag: "🇪🇸" }, history: [] };
+      localStorage.setItem("lifeData", JSON.stringify(data));
+    }
+    function clamp(v) { return Math.max(0, Math.min(100, v)); }
+    function renderProfile() {
+      const profileDiv = document.getElementById("profile");
+      profileDiv.innerHTML = `<span><strong>${data.name}</strong></span>
+                              <span>Edad: ${data.age}</span>
+                              <span>Nacionalidad: ${data.country.name}</span>`;
+    }
+    function renderStats() {
+      const stats = ["happiness", "health", "smarts", "looks", "stress"];
+      stats.forEach(stat => {
+        document.getElementById(stat + "Bar").style.width = data[stat] + "%";
+        document.getElementById(stat + "Pct").textContent = data[stat] + "%";
+      });
+    }
+    function renderStage() {
+      const stageInfo = document.getElementById("stageInfo");
+      const actionsDiv = document.getElementById("actions");
+      actionsDiv.innerHTML = "";
+      let stage = "";
+      if (data.age < 6) {
+        stage = "Infantil (sin actividades escolares)";
+        stageInfo.innerHTML = `<h3>Etapa: ${stage}</h3><p>No tienes actividades disponibles.</p>`;
+      } else if (data.age >= 6 && data.age <= 12) {
+        stage = "Primaria";
+        stageInfo.innerHTML = `<h3>Etapa: ${stage}</h3>`;
+        addAction("Jugar", () => { data.happiness = clamp(data.happiness + 10); data.stress = clamp(data.stress - 5); addHistory("Jugaste y te divertiste."); });
+        addAction("Estudiar", () => { data.smarts = clamp(data.smarts + 10); data.stress = clamp(data.stress + 5); addHistory("Estudiaste y aprendiste."); });
+        addAction("Interactuar", () => { data.happiness = clamp(data.happiness + 5); addHistory("Interactuaste con tus compañeros."); });
+      } else if (data.age >= 12 && data.age <= 16) {
+        stage = "Instituto";
+        stageInfo.innerHTML = `<h3>Etapa: ${stage}</h3>`;
+        addAction("Estudiar", () => { data.smarts = clamp(data.smarts + 8); data.stress = clamp(data.stress + 7); addHistory("Estudiaste en el instituto."); });
+        addAction("Club Deportivo", () => { data.happiness = clamp(data.happiness + 7); addHistory("Te uniste al club deportivo."); });
+        addAction("Club de Arte", () => { data.happiness = clamp(data.happiness + 7); addHistory("Te uniste al club de arte."); });
+        addAction("Club de Ciencia", () => { data.smarts = clamp(data.smarts + 7); addHistory("Te uniste al club de ciencia."); });
+      } else {
+        stage = "Post-instituto";
+        stageInfo.innerHTML = `<h3>Etapa: ${stage}</h3>`;
+        addAction("Trabajar", () => { data.money += 500; data.stress = clamp(data.stress + 10); addHistory("Trabajaste y ganaste dinero."); });
+        addAction("FP", () => { data.smarts = clamp(data.smarts + 5); data.money += 200; data.stress = clamp(data.stress + 5); addHistory("Elegiste Formación Profesional."); });
+        addAction("Bachillerato", () => { data.smarts = clamp(data.smarts + 3); data.stress = clamp(data.stress + 8); addHistory("Elegiste Bachillerato."); });
+      }
+      localStorage.setItem("lifeData", JSON.stringify(data));
+    }
+    function addAction(text, action) {
+      const actionsDiv = document.getElementById("actions");
+      const btn = document.createElement("button");
+      btn.textContent = text;
+      btn.onclick = () => {
+        action();
+        renderProfile();
+        renderStats();
+        renderStage();
+      };
+      actionsDiv.appendChild(btn);
+    }
+    function addHistory(entry) {
+      data.history.push(entry);
+      localStorage.setItem("lifeData", JSON.stringify(data));
+    }
+    function goBack() {
+      window.location.href = "game.html";
+    }
+    renderProfile();
+    renderStats();
+    renderStage();
+  </script>
+</body>
+</html>

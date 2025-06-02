@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Set Your Stats</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .back {
+      font-size: 24px;
+      cursor: pointer;
+      margin-right: 10px;
+      background: rgba(0,0,0,0.1);
+      padding: 5px 10px;
+      border-radius: 8px;
+    }
+    h2 {
+      font-size: 20px;
+      margin: 0;
+    }
+    .sliderBox {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    .value {
+      font-size: 16px;
+      margin-left: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span class="back" onclick="goBack()">←</span>
+    <h2>Set Your Stats</h2>
+  </div>
+
+  <div class="sliderBox">
+    <label for="happinessRange">Happiness</label>
+    <input type="range" min="0" max="100" id="happinessRange">
+    <span class="value" id="happinessVal">50</span>
+  </div>
+
+  <div class="sliderBox">
+    <label for="healthRange">Health</label>
+    <input type="range" min="0" max="100" id="healthRange">
+    <span class="value" id="healthVal">50</span>
+  </div>
+
+  <div class="sliderBox">
+    <label for="smartsRange">Smarts</label>
+    <input type="range" min="0" max="100" id="smartsRange">
+    <span class="value" id="smartsVal">50</span>
+  </div>
+
+  <div class="sliderBox">
+    <label for="looksRange">Looks</label>
+    <input type="range" min="0" max="100" id="looksRange">
+    <span class="value" id="looksVal">50</span>
+  </div>
+
+  <button onclick="saveStats()">Save Stats</button>
+
+  <script>
+    function goBack() {
+      window.location.href = "index.html";
+    }
+
+    // Cargar valores iniciales o 50 por defecto
+    function initSliders() {
+      let happiness = localStorage.getItem("happiness") || "50";
+      let health = localStorage.getItem("health") || "50";
+      let smarts = localStorage.getItem("smarts") || "50";
+      let looks = localStorage.getItem("looks") || "50";
+
+      document.getElementById("happinessRange").value = happiness;
+      document.getElementById("healthRange").value = health;
+      document.getElementById("smartsRange").value = smarts;
+      document.getElementById("looksRange").value = looks;
+
+      document.getElementById("happinessVal").textContent = happiness;
+      document.getElementById("healthVal").textContent = health;
+      document.getElementById("smartsVal").textContent = smarts;
+      document.getElementById("looksVal").textContent = looks;
+    }
+
+    function saveStats() {
+      localStorage.setItem("happiness", document.getElementById("happinessRange").value);
+      localStorage.setItem("health", document.getElementById("healthRange").value);
+      localStorage.setItem("smarts", document.getElementById("smartsRange").value);
+      localStorage.setItem("looks", document.getElementById("looksRange").value);
+
+      window.location.href = "index.html";
+    }
+
+    // Actualizar label al mover slider
+    document.addEventListener("DOMContentLoaded", () => {
+      initSliders();
+      const happinessSlider = document.getElementById("happinessRange");
+      const healthSlider = document.getElementById("healthRange");
+      const smartsSlider = document.getElementById("smartsRange");
+      const looksSlider = document.getElementById("looksRange");
+
+      happinessSlider.oninput = () => {
+        document.getElementById("happinessVal").textContent = happinessSlider.value;
+      };
+      healthSlider.oninput = () => {
+        document.getElementById("healthVal").textContent = healthSlider.value;
+      };
+      smartsSlider.oninput = () => {
+        document.getElementById("smartsVal").textContent = smartsSlider.value;
+      };
+      looksSlider.oninput = () => {
+        document.getElementById("looksVal").textContent = looksSlider.value;
+      };
+    });
+  </script>
+</body>
+</html>
